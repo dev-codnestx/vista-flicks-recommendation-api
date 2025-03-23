@@ -1,11 +1,13 @@
 from pydantic import BaseModel
 from bson import ObjectId
 from datetime import datetime
+from typing import Optional
 
 class ReelSchema(BaseModel):
     reelId: str
-    uploadedBy: str  # Convert ObjectId to string
+    uploadedBy: str  
     views: int
+    type: str
     tags: list
     isDeleted: bool
     videoName: str
@@ -14,20 +16,28 @@ class ReelSchema(BaseModel):
     isApproved: bool
     status: str
     comments: list
-    createdAt: str  # Convert datetime to string
-    updatedAt: str  # Convert datetime to string
+    createdAt: str  
+    updatedAt: str  
+    videoUrl: Optional[str] = None  
+    description: Optional[str] = None  
+    title: Optional[str] = None  
 
     @classmethod
     def from_mongo(cls, data: dict):
         """Convert MongoDB document to Pydantic model."""
-        if "_id" in data:
-            data["_id"] = str(data["_id"])  # Convert ObjectId to string
-        if "uploadedBy" in data:
-            data["uploadedBy"] = str(data["uploadedBy"])  # Convert uploadedBy to string
-        if "company" in data:
-            data["company"] = str(data["company"])  # Convert company to string
+        def convert_objectid(value):
+            return str(value) if isinstance(value, ObjectId) else value
+
+        data = {key: convert_objectid(value) for key, value in data.items()}  # Convert all ObjectId fields
+
         if "createdAt" in data and isinstance(data["createdAt"], datetime):
-            data["createdAt"] = data["createdAt"].isoformat()  # Convert datetime to ISO format
+            data["createdAt"] = data["createdAt"].isoformat()  
         if "updatedAt" in data and isinstance(data["updatedAt"], datetime):
-            data["updatedAt"] = data["updatedAt"].isoformat()  # Convert datetime to ISO format
+            data["updatedAt"] = data["updatedAt"].isoformat()  
+
+        # ✅ Ensure missing fields are set to None instead of failing validation
+        data["videoUrl"] = data.get("videoUrl", None)
+        data["description"] = data.get("description", None)
+        data["title"] = data.get("title", None)
+
         return cls(**data)

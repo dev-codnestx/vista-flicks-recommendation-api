@@ -9,6 +9,4 @@ MONGO_URI = os.getenv("MONGO_URI")
 client = AsyncIOMotorClient(MONGO_URI)
 db = client["vistaFlicks_dev"]  # Replace with your actual DB name
 reels_collection = db["reels"]
-
-
-# print(reels_collection)
+feed_collection = db["feeds"]
