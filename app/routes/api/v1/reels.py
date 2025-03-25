@@ -32,14 +32,19 @@ async def get_reels_feed():
                 {"$match": {"type": feed_type}},
                 {"$sample": {"size": count}}  # Fetch exactly the number of positions
             ]):
-                fetched_reels.append(ReelSchema.from_mongo(reel))  # Convert to Pydantic model
+                reel_data = ReelSchema.from_mongo(reel)  # Convert to Pydantic model
+
+                # Ensure videoUrl is not None before adding to fetched reels
+                if reel_data.videoUrl:
+                    fetched_reels.append(reel_data)
 
             # Assign correct positions
             for index, reel in enumerate(fetched_reels):
-                response_array.append({
-                    "position": positions[index],  # Ensuring correct position assignment
-                    "type": feed_type,
-                    "data": reel
-                })
+                if index < len(positions):  # Ensure position exists before assignment
+                    response_array.append({
+                        "position": positions[index],
+                        "type": feed_type,
+                        "data": reel
+                    })
 
     return {"result": {"data": response_array}}
