@@ -117,9 +117,9 @@ async def get_reels_feed(page: int = Query(1, ge=1), limit: int = Query(10, le=5
 async def get_reels(limit: int = Query(10, le=50)):
     # Fetch "live" reels of type "reel"
     response_array = []
-    async for reel in reels_collection.find(
-        {"videoUrl": {"$ne": None}, "status": "live", "type": "reel"}
-    ).limit(limit):
+    async for reel in reels_collection.aggregate([
+    {"$match": {"videoUrl": {"$ne": None}, "status": "live", "type": "reel"}},
+    {"$sample": {"size": limit}}]):
         response_array.append(str(reel["_id"]))  # Provide only ObjectIds
 
     return {"reels": response_array}
